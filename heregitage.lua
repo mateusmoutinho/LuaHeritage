@@ -14,58 +14,44 @@ return (function ()
         selfobject.private = props.private or {}
         selfobject.meta_table =  props.meta_table or {}
         
-        selfobject.set_meta_method = function (method_name,callback)
-            selfobject.meta_table[method_name] = function (...)
-                return callback(selfobject.public,selfobject.private, ...)
-            end
-            herigitage.setmetatable (selfobject.public, selfobject.meta_table)
-        end
-        selfobject.meta_extends = function (props)
-            for k,v in herigitage.pairs(props) do
-                local item = selfobject.meta_table[k]
-                if herigitage.type(item) == "function" then
-                    selfobject.set_meta_method(k, v)
-                else
-                    selfobject.meta_table[k] = v
+        -- Factory function to create method setters
+        local function createMethodSetter(target, extraAction)
+            return function(method_name, callback)
+                target[method_name] = function (...)
+                    return callback(selfobject.public, selfobject.private, ...)
+                end
+                if extraAction then
+                    extraAction()
                 end
             end
-            
         end
-
-        selfobject.set_public_method = function (method_name, callback)
-            selfobject.public[method_name] = function (...)
-                return callback(selfobject.public,selfobject.private, ...)
-            end
-        end
-
-        selfobject.public_extends = function (props)
-            for k,v in herigitage.pairs(props) do
-                local item = selfobject.public[k]
-                if herigitage.type(item) == "function" then
-                    selfobject.set_public_method(k, v)
-                else
-                    selfobject.public[k] = v
+        
+        -- Factory function to create extends functions
+        local function createExtends(target, setter)
+            return function(props)
+                for k,v in herigitage.pairs(props) do
+                    if herigitage.type(v) == "function" then
+                        setter(k, v)
+                    else
+                        target[k] = v
+                    end
                 end
             end
-            
         end
 
-        selfobject.set_private_method = function (method_name, callback)
-            selfobject.private[method_name] = function (...)
-                return callback(selfobject.public,selfobject.private, ...)
-            end
-        end
-        selfobject.private_extends = function (props)
-            for k,v in herigitage.pairs(props) do
-                local item = selfobject.private[k]
-                if herigitage.type(item) == "function" then
-                    selfobject.set_private_method(k, v)
-                else
-                    selfobject.private[k] = v
-                end
-            end
-            
-        end
+        selfobject.set_meta_method = createMethodSetter(selfobject.meta_table, function()
+            herigitage.setmetatable(selfobject.public, selfobject.meta_table)
+        end)
+        
+        selfobject.set_public_method = createMethodSetter(selfobject.public)
+        
+        selfobject.set_private_method = createMethodSetter(selfobject.private)
+        
+        selfobject.meta_extends = createExtends(selfobject.meta_table, selfobject.set_meta_method)
+        
+        selfobject.public_extends = createExtends(selfobject.public, selfobject.set_public_method)
+        
+        selfobject.private_extends = createExtends(selfobject.private, selfobject.set_private_method)
 
         return selfobject
     end
