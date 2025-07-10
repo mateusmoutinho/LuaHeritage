@@ -74,7 +74,17 @@ Creates a new meta object that supports public/private encapsulation.
   - `props.private` (table): Initial private properties  
   - `props.meta_table` (table): Initial metamethods
 
-**Returns:** A selfobject with the following methods
+**Returns:** A selfobject with the following methods:
+
+- `public_props_extends(props)` - Direct property assignment to public table
+- `private_props_extends(props)` - Direct property assignment to private table  
+- `meta_props_extends(props)` - Direct property assignment to meta_table
+- `public_method_extends(props)` - Method assignment to public table (wraps all as methods)
+- `private_method_extends(props)` - Method assignment to private table (wraps all as methods)
+- `meta_method_extends(props)` - Method assignment to meta_table (wraps all as metamethods)
+- `set_public_method(name, callback)` - Set individual public method
+- `set_private_method(name, callback)` - Set individual private method
+- `set_meta_method(name, callback)` - Set individual metamethod
 
 ### selfobject.public_props_extends(props)
 
@@ -224,6 +234,65 @@ selfobject.meta_method_extends({
 ```
 
 ## Advanced Examples
+
+### Understanding the Difference: `*_props_extends` vs `*_method_extends`
+
+The API now clearly distinguishes between property assignment and method assignment:
+
+```lua
+local heregitage = require("heregitage")
+
+local function newExample()
+    local selfobject = heregitage.newMetaObject()
+    
+    -- Use *_props_extends for direct property assignment (data)
+    selfobject.public_props_extends({
+        name = "John",           -- string data
+        age = 30,               -- number data
+        isActive = true         -- boolean data
+    })
+    
+    selfobject.private_props_extends({
+        id = "12345",           -- private data
+        config = { debug = true } -- table data
+    })
+    
+    -- Use *_method_extends for functions that should be methods
+    selfobject.public_method_extends({
+        getName = function(public, private)
+            return public.name
+        end,
+        greet = function(public, private, greeting)
+            return greeting .. " " .. public.name
+        end,
+        isAdult = function(public, private)
+            return public.age >= 18
+        end
+    })
+    
+    selfobject.private_method_extends({
+        validateId = function(public, private)
+            return private.id ~= nil and #private.id > 0
+        end
+    })
+    
+    -- Meta methods should also use method_extends
+    selfobject.meta_method_extends({
+        __tostring = function(public, private)
+            return public.name .. " (" .. public.age .. ")"
+        end
+    })
+    
+    return selfobject.public
+end
+
+-- Usage
+local obj = newExample()
+print("Direct property access:", obj.name)  -- "John"
+print("Method call:", obj.getName())        -- "John"  
+print("Method with params:", obj.greet("Hello"))  -- "Hello John"
+print("String representation:", tostring(obj))    -- "John (30)"
+```
 
 ### Example 1: Bank Account with Private Balance
 
