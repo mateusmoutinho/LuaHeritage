@@ -36,12 +36,12 @@ local function newCar(color, speed)
     local selfobject = heregitage.newMetaObject()
     
     -- Add public properties (accessible from outside)
-    selfobject.public_extends({
+    selfobject.public_props_extends({
         color = color,
     })
     
     -- Add private properties (only accessible within methods)
-    selfobject.private_extends({
+    selfobject.private_props_extends({
         speed = speed,
     })
 
@@ -76,33 +76,71 @@ Creates a new meta object that supports public/private encapsulation.
 
 **Returns:** A selfobject with the following methods
 
-### selfobject.public_extends(props)
+### selfobject.public_props_extends(props)
 
-Adds properties to the public interface of the object.
+Adds properties directly to the public interface of the object (basic property assignment).
 
 **Parameters:**
 - `props` (table): Properties to add to public interface
 
 **Example:**
 ```lua
-selfobject.public_extends({
+selfobject.public_props_extends({
     name = "John",
     age = 30
 })
 ```
 
-### selfobject.private_extends(props)
+### selfobject.private_props_extends(props)
 
-Adds properties to the private data of the object (only accessible within methods).
+Adds properties directly to the private data of the object (only accessible within methods).
 
 **Parameters:**
 - `props` (table): Properties to add to private data
 
 **Example:**
 ```lua
-selfobject.private_extends({
+selfobject.private_props_extends({
     socialSecurityNumber = "123-45-6789",
     salary = 50000
+})
+```
+
+### selfobject.public_method_extends(props)
+
+Adds multiple public methods at once. All values in props are treated as methods and wrapped with (public, private, ...) signature.
+
+**Parameters:**
+- `props` (table): Table of method name-function pairs
+
+**Example:**
+```lua
+selfobject.public_method_extends({
+    getName = function(public, private)
+        return public.name
+    end,
+    greet = function(public, private, greeting)
+        return greeting .. " " .. public.name
+    end
+})
+```
+
+### selfobject.private_method_extends(props)
+
+Adds multiple private methods at once. All values in props are treated as methods and wrapped with (public, private, ...) signature.
+
+**Parameters:**
+- `props` (table): Table of method name-function pairs
+
+**Example:**
+```lua
+selfobject.private_method_extends({
+    calculateTax = function(public, private)
+        return private.salary * 0.2
+    end,
+    validateData = function(public, private)
+        return public.name ~= nil and private.salary > 0
+    end
 })
 ```
 
@@ -151,16 +189,31 @@ selfobject.set_meta_method("__tostring", function(public, private)
 end)
 ```
 
-### selfobject.meta_extends(props)
+### selfobject.meta_props_extends(props)
 
-Adds multiple metamethods at once.
+Adds properties directly to the meta_table.
+
+**Parameters:**
+- `props` (table): Properties to add to meta_table
+
+**Example:**
+```lua
+selfobject.meta_props_extends({
+    __index = someTable,
+    __newindex = someFunction
+})
+```
+
+### selfobject.meta_method_extends(props)
+
+Adds multiple metamethods at once. All values in props are treated as methods and wrapped with (public, private, ...) signature.
 
 **Parameters:**
 - `props` (table): Table of metamethod name-function pairs
 
 **Example:**
 ```lua
-selfobject.meta_extends({
+selfobject.meta_method_extends({
     __add = function(public, private, other)
         return public.value + other.value
     end,
@@ -180,12 +233,12 @@ local heregitage = require("heregitage")
 local function newBankAccount(initialBalance, accountHolder)
     local selfobject = heregitage.newMetaObject()
     
-    selfobject.public_extends({
+    selfobject.public_props_extends({
         accountHolder = accountHolder,
         accountNumber = math.random(100000, 999999)
     })
     
-    selfobject.private_extends({
+    selfobject.private_props_extends({
         balance = initialBalance or 0
     })
     
@@ -229,7 +282,7 @@ local heregitage = require("heregitage")
 local function newVector(x, y)
     local selfobject = heregitage.newMetaObject()
     
-    selfobject.public_extends({
+    selfobject.public_props_extends({
         x = x or 0,
         y = y or 0
     })
@@ -268,7 +321,7 @@ local heregitage = require("heregitage")
 local function newAnimal(name)
     local selfobject = heregitage.newMetaObject()
     
-    selfobject.public_extends({
+    selfobject.public_props_extends({
         name = name
     })
     
@@ -283,7 +336,7 @@ end
 local function newDog(name, breed)
     local selfobject = newAnimal(name)  -- Start with animal base
     
-    selfobject.public_extends({
+    selfobject.public_props_extends({
         breed = breed
     })
     
@@ -334,7 +387,7 @@ selfobject.set_public_method("getAge", function(public, private)
 end)
 
 -- Avoid exposing private data directly
-selfobject.public_extends({
+selfobject.public_props_extends({
     getPrivateData = function() return selfobject.private end
 })
 ```
@@ -406,7 +459,7 @@ local obj2 = getSingleton()
 local function newObservable()
     local selfobject = heregitage.newMetaObject()
     
-    selfobject.private_extends({
+    selfobject.private_props_extends({
         observers = {}
     })
     
