@@ -26,19 +26,6 @@ return (function ()
             end
         end
         
-        -- Factory function to create extends functions
-        local function createExtends(target, setter)
-            return function(props)
-                for k,v in herigitage.pairs(props) do
-                    if herigitage.type(v) == "function" then
-                        setter(k, v)
-                    else
-                        target[k] = v
-                    end
-                end
-            end
-        end
-
         selfobject.set_meta_method = createMethodSetter(selfobject.meta_table, function()
             herigitage.setmetatable(selfobject.public, selfobject.meta_table)
         end)
@@ -47,11 +34,43 @@ return (function ()
         
         selfobject.set_private_method = createMethodSetter(selfobject.private)
         
-        selfobject.meta_extends = createExtends(selfobject.meta_table, selfobject.set_meta_method)
+        -- Props extends functions - basic property assignment without function checking
+        selfobject.public_props_extends = function(props)
+            for k,v in herigitage.pairs(props) do
+                selfobject.public[k] = v
+            end
+        end
         
-        selfobject.public_extends = createExtends(selfobject.public, selfobject.set_public_method)
+        selfobject.private_props_extends = function(props)
+            for k,v in herigitage.pairs(props) do
+                selfobject.private[k] = v
+            end
+        end
         
-        selfobject.private_extends = createExtends(selfobject.private, selfobject.set_private_method)
+        selfobject.meta_props_extends = function(props)
+            for k,v in herigitage.pairs(props) do
+                selfobject.meta_table[k] = v
+            end
+        end
+        
+        -- Method extends functions - treat all props as methods
+        selfobject.public_method_extends = function(props)
+            for k,v in herigitage.pairs(props) do
+                selfobject.set_public_method(k, v)
+            end
+        end
+        
+        selfobject.private_method_extends = function(props)
+            for k,v in herigitage.pairs(props) do
+                selfobject.set_private_method(k, v)
+            end
+        end
+        
+        selfobject.meta_method_extends = function(props)
+            for k,v in herigitage.pairs(props) do
+                selfobject.set_meta_method(k, v)
+            end
+        end
 
         return selfobject
     end
