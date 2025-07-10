@@ -12,7 +12,7 @@ A lightweight Lua library for creating robust Object-Oriented Programming (OOP) 
 
 ## Installation
 
-Simply download the `heregitage.lua` file and place it in your project directory. Then require it in your Lua code:
+Simply download the [`heregitage.lua`](https://github.com/mateusmoutinho/LuaHeritage/releases/download/1.0.0/heregitage.lua) file and place it in your project directory. Then require it in your Lua code:
 
 ```lua
 local heregitage = require("heregitage")
